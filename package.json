@@ -16,9 +16,12 @@
   "license": "ISC",
   "dependencies": {
     "@inquirer/prompts": "^5.4.0",
-    "@types/node": "^22.3.0"
+    "@types/node": "^22.3.0",
+    "commander": "^12.1.0",
+    "fuse.js": "^7.0.0"
   },
   "devDependencies": {
+    "@commander-js/extra-typings": "^12.1.0",
     "esbuild": "^0.23.0"
   }
 }
