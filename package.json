@@ -1,0 +1,24 @@
+{
+  "name": "aws-login",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "aws-profile-selector": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --sourcemap",
+    "start": "node dist/index.js",
+    "dev": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --sourcemap --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@inquirer/prompts": "^5.4.0",
+    "@types/node": "^22.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0"
+  }
+}
