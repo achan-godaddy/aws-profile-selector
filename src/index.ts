@@ -5,7 +5,6 @@ import { homedir } from 'os'
 import { join } from 'path'
 import { select } from '@inquirer/prompts'
 import { execSync, spawnSync } from 'child_process'
-import { rawlist } from '@inquirer/prompts'
 
 interface AWSProfile {
   name: string
@@ -130,10 +129,10 @@ const main = async () => {
         encoding: 'utf-8',
       })
       console.log('AWS CLI command result:', result)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error executing AWS CLI command:', error.message)
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('An error occurred:', error.message)
     process.exit(1)
   }
