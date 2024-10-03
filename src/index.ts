@@ -169,7 +169,7 @@ const selectAndUseProfile = (profileName: string) => {
   saveLastUsedProfile(profileName)
 
   // Set the AWS_PROFILE environment variable
-  process.env.AWS_PROFILE = profileName
+  // process.env.AWS_PROFILE = profileName
 
   console.log(`Selected profile: ${profileName}`)
 
@@ -179,9 +179,12 @@ const selectAndUseProfile = (profileName: string) => {
 
   // Execute AWS CLI command
   try {
-    const result = execSync('aws sts get-caller-identity', {
-      encoding: 'utf-8',
-    })
+    const result = execSync(
+      `AWS_PROFILE=${profileName} aws sts get-caller-identity`,
+      {
+        encoding: 'utf-8',
+      }
+    )
     console.log('AWS CLI command result:', result)
   } catch (error: any) {
     console.error('Error executing AWS CLI command:', error.message)
