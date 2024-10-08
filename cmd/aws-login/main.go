@@ -161,14 +161,22 @@ func selectAndUseProfile(profileName string) error {
 	newRegion := getCurrentRegion()
 	fmt.Printf("New default region: %s\n", newRegion)
 
-	cmd := exec.Command("aws", "sts", "get-caller-identity")
+	useOnePassCLI := os.Getenv("USE_ONEPASS_CLI")
+	var cmd *exec.Cmd
+
+	if useOnePassCLI == "true" {
+		cmd = exec.Command("op", "run", "--", "aws", "sts", "get-caller-identity")
+	} else {
+		cmd = exec.Command("aws", "sts", "get-caller-identity")
+	}
+
 	cmd.Env = append(os.Environ(), fmt.Sprintf("AWS_PROFILE=%s", profileName))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error executing AWS CLI command: %v", err)
 	}
-	fmt.Printf("AWS CLI command result:\n%s", output)
 
+	fmt.Printf("Command output: %s\n", output)
 	return nil
 }
 
