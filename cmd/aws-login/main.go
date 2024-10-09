@@ -16,6 +16,7 @@ import (
 
 type AWSProfile struct {
 	Name               string
+	AWSAccountID       string
 	AWSAccessKeyID     string
 	AWSSecretAccessKey string
 	Region             string
@@ -65,6 +66,8 @@ func parseAWSCredentials(content string) map[string]AWSProfile {
 				profile.AWSAccessKeyID = value
 			case "aws_secret_access_key":
 				profile.AWSSecretAccessKey = value
+			case "aws_account_id":
+				profile.AWSAccountID = value
 			case "region":
 				profile.Region = value
 			case "role_arn":
@@ -127,7 +130,7 @@ func showProfileSelectionPrompt(profiles map[string]AWSProfile) (string, error) 
 	for _, name := range names {
 		profile := profiles[name]
 		emoji := getProfileEmoji(name)
-		displayName := fmt.Sprintf("%s %s (%s)", emoji, name, profile.Region)
+		displayName := fmt.Sprintf("%s %s (%s)", emoji, name, profile.AWSAccountID)
 		options = append(options, huh.NewOption(displayName, name))
 	}
 
