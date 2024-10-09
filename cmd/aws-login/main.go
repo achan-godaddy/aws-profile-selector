@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/sahilm/fuzzy"
 )
 
 type AWSProfile struct {
@@ -106,18 +105,52 @@ func getCurrentRegion() string {
 }
 
 func searchProfiles(profiles map[string]AWSProfile, query string) []AWSProfile {
-	var names []string
-	for name := range profiles {
-		names = append(names, name)
+	query = strings.ToLower(query)
+	var rankedProfiles []AWSProfile
+
+	type profileScore struct {
+		profile AWSProfile
+		score   int
 	}
 
-	matches := fuzzy.Find(query, names)
-	var result []AWSProfile
-	for _, match := range matches {
-		result = append(result, profiles[match.Str])
+	var scores []profileScore
+
+	for name, profile := range profiles {
+		score := rankProfile(name, query)
+		if score > 0 {
+			scores = append(scores, profileScore{profile: profile, score: score})
+		}
 	}
 
-	return result
+	//print the scores
+	for _, ps := range scores {
+		fmt.Printf("Profile: %s, Score: %d\n", ps.profile.Name, ps.score)
+	}
+
+	// Sort profiles by score in descending order
+	sort.Slice(scores, func(i, j int) bool {
+		return scores[i].score > scores[j].score
+	})
+
+	for _, ps := range scores {
+		rankedProfiles = append(rankedProfiles, ps.profile)
+	}
+
+	return rankedProfiles
+}
+
+func rankProfile(profileName, query string) int {
+	profileName = strings.ToLower(profileName)
+	terms := strings.Fields(query)
+	score := 0
+
+	for _, term := range terms {
+		if strings.Contains(profileName, term) {
+			score += 1
+		}
+	}
+
+	return score
 }
 
 func showProfileSelectionPrompt(profiles map[string]AWSProfile) (string, error) {
@@ -197,7 +230,7 @@ func main() {
 	profiles := parseAWSCredentials(string(content))
 
 	if len(os.Args) > 1 {
-		search := os.Args[1]
+		search := strings.Join(os.Args[1:], " ")
 		searchResults := searchProfiles(profiles, search)
 		if len(searchResults) > 0 {
 			suggestedProfile := searchResults[0]
