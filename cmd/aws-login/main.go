@@ -25,6 +25,57 @@ type AWSProfile struct {
 
 const lastUsedFile = ".aws-profile-selector-last"
 
+func main() {
+	profiles, err := loadProfiles()
+	if err != nil {
+		fmt.Printf("Error reading AWS credentials: %v\n", err)
+		os.Exit(1)
+	}
+
+	selectedProfile := handleCommandLineArgs(profiles)
+	if selectedProfile == "" {
+		selectedProfile, err = showProfileSelectionPrompt(profiles)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	if err := selectAndUseProfile(selectedProfile); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func loadProfiles() (map[string]AWSProfile, error) {
+	homeDir, _ := os.UserHomeDir()
+	credentialsPath := filepath.Join(homeDir, ".aws", "credentials")
+	content, err := os.ReadFile(credentialsPath)
+	if err != nil {
+		return nil, err
+	}
+	return parseAWSCredentials(string(content)), nil
+}
+
+func handleCommandLineArgs(profiles map[string]AWSProfile) string {
+	if len(os.Args) > 1 {
+		search := strings.Join(os.Args[1:], " ")
+		searchResults := searchProfiles(profiles, search)
+		if len(searchResults) > 0 {
+			suggestedProfile := searchResults[0]
+			fmt.Printf("Use suggested profile \"%s\"? (y/n): ", suggestedProfile.Name)
+			var response string
+			fmt.Scanln(&response)
+			if strings.ToLower(response) == "y" {
+				return suggestedProfile.Name
+			}
+		} else {
+			fmt.Println("No matching profiles found.")
+		}
+	}
+	return ""
+}
+
 func getProfileEmoji(profileName string) string {
 	if strings.Contains(profileName, "prod") {
 		return "" // 🔴
@@ -122,11 +173,6 @@ func searchProfiles(profiles map[string]AWSProfile, query string) []AWSProfile {
 		}
 	}
 
-	//print the scores
-	for _, ps := range scores {
-		fmt.Printf("Profile: %s, Score: %d\n", ps.profile.Name, ps.score)
-	}
-
 	// Sort profiles by score in descending order
 	sort.Slice(scores, func(i, j int) bool {
 		return scores[i].score > scores[j].score
@@ -216,47 +262,4 @@ func selectAndUseProfile(profileName string) error {
 
 	fmt.Printf("Command output: %s\n", output)
 	return nil
-}
-
-func main() {
-	homeDir, _ := os.UserHomeDir()
-	credentialsPath := filepath.Join(homeDir, ".aws", "credentials")
-	content, err := os.ReadFile(credentialsPath)
-	if err != nil {
-		fmt.Printf("Error reading AWS credentials: %v\n", err)
-		os.Exit(1)
-	}
-
-	profiles := parseAWSCredentials(string(content))
-
-	if len(os.Args) > 1 {
-		search := strings.Join(os.Args[1:], " ")
-		searchResults := searchProfiles(profiles, search)
-		if len(searchResults) > 0 {
-			suggestedProfile := searchResults[0]
-			fmt.Printf("Use suggested profile \"%s\"? (y/n): ", suggestedProfile.Name)
-			var response string
-			fmt.Scanln(&response)
-			if strings.ToLower(response) == "y" {
-				if err := selectAndUseProfile(suggestedProfile.Name); err != nil {
-					fmt.Printf("Error: %v\n", err)
-					os.Exit(1)
-				}
-				return
-			}
-		} else {
-			fmt.Println("No matching profiles found.")
-		}
-	}
-
-	selectedProfile, err := showProfileSelectionPrompt(profiles)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
-	}
-
-	if err := selectAndUseProfile(selectedProfile); err != nil {
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
-	}
 }
