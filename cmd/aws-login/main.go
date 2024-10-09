@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/lithammer/fuzzysearch/fuzzy"
+	"github.com/sahilm/fuzzy"
 )
 
 type AWSProfile struct {
@@ -105,17 +105,19 @@ func getCurrentRegion() string {
 	return strings.TrimSpace(string(output))
 }
 
-func fuzzySearchProfiles(query string, profiles map[string]AWSProfile) []AWSProfile {
+func searchProfiles(profiles map[string]AWSProfile, query string) []AWSProfile {
 	var names []string
 	for name := range profiles {
 		names = append(names, name)
 	}
+
 	matches := fuzzy.Find(query, names)
-	var results []AWSProfile
+	var result []AWSProfile
 	for _, match := range matches {
-		results = append(results, profiles[match])
+		result = append(result, profiles[match.Str])
 	}
-	return results
+
+	return result
 }
 
 func showProfileSelectionPrompt(profiles map[string]AWSProfile) (string, error) {
@@ -196,7 +198,7 @@ func main() {
 
 	if len(os.Args) > 1 {
 		search := os.Args[1]
-		searchResults := fuzzySearchProfiles(search, profiles)
+		searchResults := searchProfiles(profiles, search)
 		if len(searchResults) > 0 {
 			suggestedProfile := searchResults[0]
 			fmt.Printf("Use suggested profile \"%s\"? (y/n): ", suggestedProfile.Name)
