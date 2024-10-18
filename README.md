@@ -2,8 +2,15 @@
 
 ## Installation
 
-`go install ./cmd/aws-login`
 `go install github.com/achan-godaddy/aws-profile-selector/cmd/aws-login`
+
+## Local installation
+
+```sh
+git checkout https://github.com/achan-godaddy/aws-profile-selector/cmd/aws-login
+cd aws-login
+go install ./cmd/aws-login
+```
 
 ## Usage
 
