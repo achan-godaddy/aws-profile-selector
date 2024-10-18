@@ -28,6 +28,9 @@ aws_account_id=123456789012
 credential_process = aws-okta-processor authenticate -u USER_ID_GOES_HERE -o godaddy.okta.com -k default -d 7200 --role arn:aws:iam::123456789012:role/THE_ROLE
 ```
 
+remember in the `aws-okta-processor` command line you can also add the `--application` url to reduce having to choose an application if there are multiple.
+
+
 ## Use the 1password cli
 
 set the environment variable `export USE_ONEPASS_CLI=true`. This will use the 1password cli to get the password for the user.
