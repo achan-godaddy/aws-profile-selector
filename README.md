@@ -31,10 +31,3 @@ credential_process = aws-okta-processor authenticate -u USER_ID_GOES_HERE -o god
 remember in the `aws-okta-processor` command line you can also add the `--application` url to reduce having to choose an application if there are multiple.
 
 
-## Use the 1password cli
-
-set the environment variable `export USE_ONEPASS_CLI=true`. This will use the 1password cli to get the password for the user.
-
-```
-AWS_OKTA_PASS=op://vault/identifier/password
-```
