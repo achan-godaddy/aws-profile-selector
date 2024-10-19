@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -26,14 +27,33 @@ type AWSProfile struct {
 const lastUsedFile = ".aws-profile-selector-last"
 
 func main() {
+	var useLastProfile bool
+	var searchTerm string
+
+	flag.BoolVar(&useLastProfile, "l", false, "Use the last saved profile")
+	flag.StringVar(&searchTerm, "s", "", "Search term for profile selection")
+	flag.Parse()
+
 	profiles, err := loadProfiles()
 	if err != nil {
 		fmt.Printf("Error reading AWS credentials: %v\n", err)
 		os.Exit(1)
 	}
 
-	selectedProfile := handleCommandLineArgs(profiles)
+	var selectedProfile string
+
+	if useLastProfile {
+		selectedProfile = getLastUsedProfile()
+		if selectedProfile == "" {
+			fmt.Println("No last used profile found.")
+			os.Exit(1)
+		}
+	} else if searchTerm != "" {
+		selectedProfile = handleProfileSearch(profiles, searchTerm)
+	}
+
 	if selectedProfile == "" {
+		var err error
 		selectedProfile, err = showProfileSelectionPrompt(profiles)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
@@ -52,6 +72,22 @@ func main() {
 	}
 }
 
+func handleProfileSearch(profiles map[string]AWSProfile, searchTerm string) string {
+	searchResults := searchProfiles(profiles, searchTerm)
+	if len(searchResults) > 0 {
+		suggestedProfile := searchResults[0]
+		fmt.Printf("Use suggested profile \"%s\"? (y/n): ", suggestedProfile.Name)
+		var response string
+		fmt.Scanln(&response)
+		if strings.ToLower(response) == "y" {
+			return suggestedProfile.Name
+		}
+	} else {
+		fmt.Println("No matching profiles found.")
+	}
+	return ""
+}
+
 func loadProfiles() (map[string]AWSProfile, error) {
 	homeDir, _ := os.UserHomeDir()
 	credentialsPath := filepath.Join(homeDir, ".aws", "credentials")
@@ -62,33 +98,6 @@ func loadProfiles() (map[string]AWSProfile, error) {
 	return parseAWSCredentials(string(content)), nil
 }
 
-func handleCommandLineArgs(profiles map[string]AWSProfile) string {
-	if len(os.Args) > 1 {
-		if os.Args[1] == "-l" {
-			lastUsed := getLastUsedProfile()
-			if lastUsed != "" {
-				return lastUsed
-			}
-			fmt.Println("No last used profile found.")
-			return ""
-		}
-
-		search := strings.Join(os.Args[1:], " ")
-		searchResults := searchProfiles(profiles, search)
-		if len(searchResults) > 0 {
-			suggestedProfile := searchResults[0]
-			fmt.Printf("Use suggested profile \"%s\"? (y/n): ", suggestedProfile.Name)
-			var response string
-			fmt.Scanln(&response)
-			if strings.ToLower(response) == "y" {
-				return suggestedProfile.Name
-			}
-		} else {
-			fmt.Println("No matching profiles found.")
-		}
-	}
-	return ""
-}
 func getProfileEmoji(profileName string) string {
 	if strings.Contains(profileName, "prod") {
 		return "" // 🔴
