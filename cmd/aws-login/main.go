@@ -41,6 +41,11 @@ func main() {
 		}
 	}
 
+	if selectedProfile == "" {
+		fmt.Println("No profile selected. Exiting.")
+		os.Exit(1)
+	}
+
 	if err := selectAndUseProfile(selectedProfile); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
@@ -59,6 +64,15 @@ func loadProfiles() (map[string]AWSProfile, error) {
 
 func handleCommandLineArgs(profiles map[string]AWSProfile) string {
 	if len(os.Args) > 1 {
+		if os.Args[1] == "-l" {
+			lastUsed := getLastUsedProfile()
+			if lastUsed != "" {
+				return lastUsed
+			}
+			fmt.Println("No last used profile found.")
+			return ""
+		}
+
 		search := strings.Join(os.Args[1:], " ")
 		searchResults := searchProfiles(profiles, search)
 		if len(searchResults) > 0 {
@@ -75,7 +89,6 @@ func handleCommandLineArgs(profiles map[string]AWSProfile) string {
 	}
 	return ""
 }
-
 func getProfileEmoji(profileName string) string {
 	if strings.Contains(profileName, "prod") {
 		return "" // 🔴
